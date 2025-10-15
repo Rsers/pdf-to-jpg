@@ -1,0 +1,225 @@
+任务：修复 Vercel 部署后的多个问题
+
+复杂度：complex
+原因：涉及 Vercel 平台依赖安装、前端交互、文件大小限制
+
+=== 问题列表 ===
+
+问题 1：500 错误 - poppler 未安装
+- 错误信息：Unable to get page count. Is poppler installed and in PATH?
+- 原因：Vercel Serverless Functions 默认不包含 poppler-utils
+- 测试文件：96 KB 的 PDF 文件
+
+问题 2：重复选择文件
+- 现象：选择文件后会再次弹出选择对话框，然后才真正上传
+- 原因：前端事件处理逻辑有问题
+
+问题 3：文件大小限制
+- 需求：将限制从 16MB 改为 4MB（Vercel 平台限制）
+- 前端需要客户端验证，避免无效请求
+
+=== 问题 1 解决方案：Vercel 安装 poppler ===
+
+Vercel 需要通过 `vercel.json` 或 `requirements.txt` 安装系统依赖。
+
+方案：使用 `python-poppler` 替代系统 poppler
+或者：通过 Vercel Build 配置安装 poppler
+
+推荐方案：修改依赖，使用纯 Python 方案
+
+1. 创建 `vercel.json` 配置（如果还没有）：
+   ```json
+   {
+     "builds": [
+       {
+         "src": "api/upload.py",
+         "use": "@vercel/python",
+         "config": {
+           "maxLambdaSize": "15mb"
+         }
+       }
+     ]
+   }
+   ```
+
+2. 或者在 `api/upload.py` 顶部添加环境检测和错误处理：
+   ```python
+   # 检查 poppler 是否可用
+   try:
+       from pdf2image.exceptions import PDFInfoNotInstalledError
+       # 测试 poppler 是否安装
+       import subprocess
+       subprocess.run(['pdftoppm', '-v'], capture_output=True, check=True)
+       POPPLER_AVAILABLE = True
+   except Exception:
+       POPPLER_AVAILABLE = False
+       # Vercel 环境需要额外配置
+   ```
+
+3. **最佳方案**：在项目根目录创建 `vercel-build.sh`：
+   ```bash
+   #!/bin/bash
+   # Vercel 构建时安装 poppler
+   apt-get update
+   apt-get install -y poppler-utils
+   ```
+
+   然后在 `vercel.json` 中引用：
+   ```json
+   {
+     "buildCommand": "bash vercel-build.sh && pip install -r requirements.txt"
+   }
+   ```
+
+**但是**，Vercel Serverless Functions 不支持自定义系统包安装！
+
+**正确方案**：使用 `pdf2image` 的替代方案，或者使用预编译的 poppler
+
+实际上，Vercel 支持通过 `Dockerfile` 或使用 `apt` buildpack。
+
+**简化方案**：检查错误并给出友好提示
+
+```python
+try:
+    images = convert_from_path(pdf_path, dpi=150, fmt='jpeg')
+except Exception as e:
+    if "poppler" in str(e).lower():
+        return jsonify({
+            "error": True,
+            "message": "服务器配置错误：PDF 转换工具未安装。请联系管理员。"
+        }), 500
+    raise
+```
+
+=== 问题 2 解决方案：修复重复选择文件 ===
+
+检查 `public/script.js` 和 `public/index.html`：
+
+可能的原因：
+1. 按钮点击事件触发了两次 `fileInput.click()`
+2. `change` 事件和 `drop` 事件冲突
+3. 事件委托问题
+
+需要检查的代码：
+```javascript
+// 可能的问题代码
+selectBtn.addEventListener('click', () => {
+    fileInput.click(); // 第一次
+});
+
+fileInput.addEventListener('change', handleFileSelect); // 第二次？
+```
+
+解决方案：
+- 确保 `fileInput.click()` 只调用一次
+- 移除重复的事件监听
+- 检查是否有事件冒泡问题
+
+=== 问题 3 解决方案：文件大小限制 4MB ===
+
+1. 后端（api/upload.py）：
+   ```python
+   MAX_CONTENT_LENGTH = 4 * 1024 * 1024  # 4MB
+   
+   @app.errorhandler(413)
+   def too_large(e):
+       return jsonify({
+           "error": True,
+           "message": "文件过大，最大支持 4MB"
+       }), 413
+   ```
+
+2. 前端（public/script.js）：
+   ```javascript
+   function processFile(file) {
+       const MAX_SIZE = 4 * 1024 * 1024; // 4MB
+       
+       if (file.size > MAX_SIZE) {
+           const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+           showMessage(`文件过大 (${sizeMB} MB)，最大支持 4MB`, 'error');
+           return;
+       }
+       
+       // 继续上传...
+   }
+   ```
+
+3. UI 提示（public/index.html）：
+   ```html
+   <p class="file-size">最大支持 4MB 的 PDF 文件</p>
+   ```
+
+=== 输出要求 ===
+
+生成修复后的完整文件：
+
+1. **vercel.json** - Vercel 配置（如果需要修改）
+2. **api/upload.py** - 修复后的后端代码
+   - 添加 poppler 错误处理
+   - 修改文件大小限制为 4MB
+   - 友好的错误提示
+
+3. **public/script.js** - 修复后的前端代码
+   - 修复重复选择文件问题
+   - 添加客户端文件大小验证
+   - 改进错误提示
+
+4. **public/index.html** - 修复后的 HTML
+   - 添加文件大小提示
+   - 修复按钮交互问题（如果有）
+
+=== 关键要求 ===
+
+1. **Vercel poppler 问题**
+   - 由于 Vercel Serverless Functions 不支持安装系统包
+   - 需要在 README 中说明限制
+   - 或者建议用户使用支持自定义环境的平台（Railway/Render）
+   - 或者返回友好错误提示
+
+2. **前端交互问题**
+   - 必须修复重复选择文件的 bug
+   - 确保用户体验流畅
+
+3. **文件大小验证**
+   - 前端立即验证，避免无效请求
+   - 后端也验证，双重保护
+
+=== 验收标准 ===
+
+1. ✅ 上传 < 4MB 的 PDF 不再出现 poppler 错误（或给出友好提示）
+2. ✅ 选择文件后不会重复弹出选择对话框
+3. ✅ 上传 > 4MB 的文件在前端立即提示错误
+4. ✅ 错误提示清晰友好
+
+=== 特别说明 ===
+
+**Vercel Serverless Functions 的限制：**
+- 不支持安装系统依赖（如 poppler-utils）
+- 只能使用 Python 包（pip install）
+
+**因此，pdf2image 在 Vercel 上无法正常工作！**
+
+**替代方案：**
+1. 使用纯 Python 的 PDF 库（如 PyPDF2 + Pillow）
+2. 或者迁移到支持自定义环境的平台（Railway/Render）
+3. 或者返回友好错误，建议用户使用其他方式
+
+**请在输出中说明这个限制，并提供替代方案建议。**
+
+=== 输出格式 ===
+
+=== 说明 ===
+[说明 Vercel poppler 限制和推荐方案]
+
+=== api/upload.py ===
+[完整修改后的代码]
+
+=== public/script.js ===
+[完整修改后的代码]
+
+=== public/index.html ===
+[完整修改后的代码]
+
+=== README.md 更新 ===
+[需要添加的说明部分]
+

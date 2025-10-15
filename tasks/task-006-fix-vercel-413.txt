@@ -1,0 +1,118 @@
+任务：修复 Vercel 部署后的 413 错误（文件过大）
+
+复杂度：complex
+原因：涉及 Vercel 平台限制、前后端适配、错误处理
+
+=== 问题描述 ===
+
+用户在 Vercel 部署后上传 PDF 文件时遇到 413 错误：
+- 错误信息：Failed to load resource: the server responded with a status of 413
+- JavaScript 错误：转换错误: Error: 服务器错误: 413
+- 部署 URL：https://pdf-to-jpg-lyart.vercel.app/
+
+=== 问题分析 ===
+
+1. Vercel Serverless Functions 有默认的请求体大小限制：
+   - 免费版：4.5 MB
+   - Pro 版：4.5 MB (Serverless Functions)
+   - 不可配置增加
+
+2. 当前代码设置：
+   - api/upload.py: MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+   - 但 Vercel 会在到达 Flask 之前就拦截
+
+3. 用户体验问题：
+   - 前端没有明确提示文件大小限制
+   - 错误信息不友好
+
+=== 解决方案要求 ===
+
+1. 后端适配（api/upload.py）
+   - 将 MAX_CONTENT_LENGTH 降低到 4MB（安全值）
+   - 更新错误提示信息，明确说明 Vercel 限制
+   - 保持环境适配逻辑（IS_VERCEL）
+
+2. 前端优化（public/script.js）
+   - 在上传前检查文件大小（客户端验证）
+   - 如果文件 > 4MB，立即显示友好提示
+   - 不发送网络请求，节省带宽
+
+3. 前端 UI（public/index.html）
+   - 在上传区显示文件大小限制提示
+   - 例如："最大支持 4MB 的 PDF 文件"
+
+=== 技术要求 ===
+
+1. api/upload.py 修改：
+   ```python
+   # 修改文件大小限制
+   MAX_CONTENT_LENGTH = 4 * 1024 * 1024  # 4MB (Vercel 免费版限制)
+   
+   # 更新错误处理器
+   @app.errorhandler(413)
+   def too_large(e):
+       return jsonify({
+           "error": True,
+           "message": "文件大小超过限制 (4MB)。Vercel 免费版限制为 4.5MB，建议使用小于 4MB 的 PDF 文件。"
+       }), 413
+   ```
+
+2. public/script.js 修改：
+   ```javascript
+   // 在 processFile 函数开头添加文件大小检查
+   function processFile(file) {
+       const MAX_SIZE = 4 * 1024 * 1024; // 4MB
+       
+       if (file.size > MAX_SIZE) {
+           const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+           showMessage(`文件过大 (${sizeMB}MB)。请使用小于 4MB 的 PDF 文件。`, 'error');
+           return;
+       }
+       
+       // 原有的上传逻辑...
+   }
+   ```
+
+3. public/index.html 修改：
+   ```html
+   <!-- 在上传区添加文件大小提示 -->
+   <p class="file-size">最大支持 4MB 的 PDF 文件</p>
+   ```
+
+=== 输出要求 ===
+
+生成 3 个修复后的完整文件：
+
+1. api/upload.py - 修改后的后端代码
+2. public/script.js - 修改后的前端逻辑
+3. public/index.html - 修改后的 HTML（如果需要）
+
+要求：
+- 保持代码风格一致
+- 保留所有现有功能
+- 只修改文件大小限制和相关提示
+- 不要引入新的依赖
+
+=== 验收标准 ===
+
+1. ✅ 上传 < 4MB 的 PDF 文件成功转换
+2. ✅ 上传 > 4MB 的 PDF 文件在前端立即提示错误
+3. ✅ 错误提示清晰友好，说明文件大小限制
+4. ✅ 不再出现 413 错误
+5. ✅ UI 显示文件大小限制（4MB）
+
+=== 输出格式 ===
+
+按以下格式输出修改后的文件：
+
+=== api/upload.py ===
+[完整修改后的 Python 代码]
+
+=== public/script.js ===
+[完整修改后的 JavaScript 代码]
+
+=== public/index.html ===
+[如果需要修改，输出完整 HTML；如果不需要修改，说明"无需修改"]
+
+请确保代码可以直接使用，无需额外调整。
+
