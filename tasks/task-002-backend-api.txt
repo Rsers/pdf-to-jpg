@@ -1,0 +1,159 @@
+任务：开发 PDF to JPG 转换网站的后端 API（Vercel Serverless Function）
+
+复杂度：complex
+原因：涉及 Vercel 平台适配、文件系统限制（/tmp）、异步文件处理、错误处理、环境判断
+
+=== 技术要求 ===
+
+1. 框架：Flask
+2. 部署平台：Vercel Serverless Functions
+3. 文件位置：api/upload.py
+4. Python版本：3.9+
+
+=== 核心功能 ===
+
+1. POST /api/upload 端点
+   - 接收 PDF 文件上传
+   - 转换为 JPG（每页一张）
+   - 打包成 ZIP 文件
+   - 返回 ZIP 文件供下载
+
+=== Vercel 环境适配要求（重要）===
+
+1. 文件系统限制：
+   - Vercel 文件系统只读
+   - 必须使用 /tmp 目录存储临时文件
+   - 环境判断：`os.environ.get('VERCEL')`
+
+2. 路径选择逻辑：
+   ```python
+   IS_VERCEL = os.environ.get('VERCEL') is not None
+   UPLOAD_FOLDER = '/tmp' if IS_VERCEL else './uploads'
+   ```
+
+3. 超时限制：
+   - Vercel Serverless Function 默认超时 10 秒
+   - 控制 PDF 页数建议 < 50 页
+
+4. 内存限制：
+   - 1GB 内存限制
+   - 使用 DPI=150 控制内存占用
+
+=== PDF 转换参数 ===
+
+1. pdf2image 配置：
+   - DPI: 150（适中质量，网页查看足够）
+   - 格式: JPEG
+   - 每页转成一张 JPG
+
+2. Pillow 压缩配置：
+   - JPEG quality: 85（平衡质量和文件大小）
+   - optimize: True（优化文件大小）
+
+=== 安全要求 ===
+
+1. 文件验证：
+   - 只允许 .pdf 扩展名
+   - 检查文件是否存在
+
+2. 文件大小限制：
+   - MAX_CONTENT_LENGTH: 16MB
+
+3. 临时文件清理：
+   - 处理完成后删除 /tmp 目录下的临时文件
+   - 使用 atexit 或 try-finally 确保清理
+
+=== 错误处理 ===
+
+1. 400 Bad Request：
+   - 无文件上传
+   - 文件类型不是 PDF
+   - 文件名为空
+
+2. 500 Internal Server Error：
+   - PDF 转换失败
+   - ZIP 打包失败
+   - 捕获所有异常并返回友好提示
+
+3. 错误响应格式：
+   ```json
+   {
+     "error": true,
+     "message": "错误描述"
+   }
+   ```
+
+=== 代码结构要求 ===
+
+1. 函数拆分：
+   - allowed_file(filename) - 验证文件类型
+   - convert_pdf_to_jpg(pdf_path) - PDF 转 JPG 核心逻辑
+   - cleanup_temp_files(directory) - 清理临时文件
+   - 主路由处理函数
+
+2. 日志记录：
+   - 使用 print() 输出关键步骤（Vercel 会捕获）
+   - 记录：上传文件名、转换页数、ZIP 文件大小
+
+=== 工作流程 ===
+
+1. 接收文件上传（request.files['file']）
+2. 验证文件类型和存在性
+3. 保存到 /tmp 目录
+4. 使用 pdf2image 转换为 JPG 列表
+5. 使用 Pillow 保存 JPG 文件（quality=85）
+6. 使用 zipfile 打包所有 JPG
+7. 返回 ZIP 文件（send_file）
+8. 清理临时文件
+
+=== 输出要求 ===
+
+1. 文件路径：api/upload.py
+2. 完整可运行的 Flask 应用
+3. 包含所有 import 语句
+4. 包含详细注释（中文）
+5. 符合 Vercel Serverless Functions 规范
+
+=== Vercel Serverless Functions 规范 ===
+
+1. 文件必须导出 Flask app 对象：
+   ```python
+   from flask import Flask
+   app = Flask(__name__)
+   ```
+
+2. Vercel 会自动识别 api/ 目录下的 Python 文件
+3. 路由路径会自动映射：api/upload.py → /api/upload
+
+=== 依赖库 ===
+
+确保使用以下库：
+- Flask
+- pdf2image
+- Pillow
+- zipfile（标准库）
+- os（标准库）
+- atexit（标准库）
+
+=== 特别注意 ===
+
+1. 必须处理 Vercel 环境和本地环境的差异
+2. 必须使用 /tmp 目录（Vercel 唯一可写目录）
+3. 必须清理临时文件（避免超出存储限制）
+4. 必须捕获所有异常并返回友好错误
+5. 必须验证文件类型（安全）
+
+=== 成功标准 ===
+
+1. ✅ 本地可运行（flask run）
+2. ✅ 支持 Vercel 环境（/tmp 路径）
+3. ✅ 上传 PDF → 返回 ZIP
+4. ✅ 错误处理完善
+5. ✅ 临时文件自动清理
+6. ✅ 代码清晰，注释完整
+
+=== 输出格式 ===
+
+只输出完整的 Python 代码，不要包含任何说明文字。
+代码必须可以直接保存为 api/upload.py 并运行。
+

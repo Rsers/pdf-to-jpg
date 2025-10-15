@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to JPG 转换器</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">PDF to JPG 转换器</h1>
+        <p class="subtitle">上传 PDF 文件，转换为 JPG 图片并打包下载</p>
+        
+        <!-- 上传区域 -->
+        <div id="dropArea" class="drop-area">
+            <svg class="upload-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="#4A90E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <polyline points="14,2 14,8 20,8" stroke="#4A90E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="16" y1="13" x2="8" y2="13" stroke="#4A90E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="12" y1="17" x2="12" y2="9" stroke="#4A90E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p class="drop-text">拖拽 PDF 文件到此处</p>
+            <p class="drop-or">或</p>
+            <button id="selectBtn" class="select-btn">选择文件</button>
+            <input type="file" id="fileInput" accept=".pdf" hidden>
+            <p class="file-size">最大支持 16MB 的 PDF 文件</p>
+        </div>
+        
+        <!-- 加载动画 -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>正在转换...</p>
+        </div>
+        
+        <!-- 提示信息 -->
+        <div id="message" class="message hidden"></div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

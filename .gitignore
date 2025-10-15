@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+venv/
+.venv/
+
+# Temporary files
+uploads/
+*.pdf
+*.jpg
+*.zip
+/tmp/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Vercel
+.vercel/

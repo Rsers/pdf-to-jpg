@@ -1,0 +1,232 @@
+任务：开发 PDF to JPG 转换网站的前端页面
+
+复杂度：simple
+原因：独立的 HTML/CSS/JavaScript，无复杂状态管理，纯样板代码
+
+=== 技术要求 ===
+
+1. 纯 HTML/CSS/JavaScript（无框架）
+2. 文件位置：public/index.html, public/style.css, public/script.js
+3. 现代简洁的 UI 设计
+
+=== 核心功能 ===
+
+1. 文件上传功能
+   - 支持点击上传
+   - 支持拖拽上传（Drag & Drop）
+   - 只允许 PDF 文件
+   - 文件大小限制：16MB
+
+2. 上传进度提示
+   - 上传/转换时显示加载动画
+   - 显示"正在转换..."提示
+
+3. 下载功能
+   - 转换完成后自动下载 ZIP 文件
+   - 显示成功提示
+
+4. 错误处理
+   - 显示友好的错误提示（红色）
+   - 非 PDF 文件提示
+   - 文件过大提示
+   - 服务器错误提示
+
+=== UI 设计要求 ===
+
+1. 布局
+   - 居中设计
+   - 响应式布局（移动端适配）
+   - 简洁现代
+
+2. 配色方案
+   - 主色：蓝色系（#4A90E2）
+   - 背景：浅灰色（#F5F5F5）
+   - 上传区：白色卡片 + 虚线边框
+   - 错误：红色（#E74C3C）
+   - 成功：绿色（#27AE60）
+
+3. 上传区样式
+   - 虚线边框
+   - 拖拽时高亮
+   - 图标 + 文字提示
+   - 悬停效果
+
+4. 按钮样式
+   - 圆角按钮
+   - 悬停效果
+   - 禁用状态
+
+=== 交互逻辑 ===
+
+1. 文件选择
+   ```javascript
+   // 监听文件选择
+   fileInput.addEventListener('change', handleFileSelect)
+   
+   // 监听拖拽
+   dropArea.addEventListener('drop', handleDrop)
+   dropArea.addEventListener('dragover', handleDragOver)
+   ```
+
+2. 文件上传
+   ```javascript
+   // 使用 FormData + Fetch API
+   const formData = new FormData()
+   formData.append('file', file)
+   
+   fetch('/api/upload', {
+     method: 'POST',
+     body: formData
+   })
+   ```
+
+3. 文件下载
+   ```javascript
+   // 接收 Blob 并自动下载
+   response.blob().then(blob => {
+     const url = window.URL.createObjectURL(blob)
+     const a = document.createElement('a')
+     a.href = url
+     a.download = 'converted.zip'
+     a.click()
+   })
+   ```
+
+=== 文件结构 ===
+
+public/
+├── index.html    # 主页面
+├── style.css     # 样式
+└── script.js     # 交互逻辑
+
+=== HTML 结构要求 ===
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to JPG 转换器</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>PDF to JPG 转换器</h1>
+        <p class="subtitle">上传 PDF 文件，转换为 JPG 图片并打包下载</p>
+        
+        <!-- 上传区 -->
+        <div id="dropArea" class="drop-area">
+            <svg>...</svg>
+            <p>拖拽 PDF 文件到此处</p>
+            <p>或</p>
+            <button id="selectBtn">选择文件</button>
+            <input type="file" id="fileInput" accept=".pdf" hidden>
+        </p>
+        
+        <!-- 加载动画 -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>正在转换...</p>
+        </div>
+        
+        <!-- 提示信息 -->
+        <div id="message" class="message hidden"></div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
+```
+
+=== CSS 样式要求 ===
+
+1. 全局样式
+   - 使用系统字体栈
+   - 平滑过渡动画
+
+2. 上传区样式
+   - 虚线边框（dashed）
+   - 内边距：40px
+   - 悬停时背景色变化
+
+3. 加载动画
+   - CSS 旋转动画
+   - 居中显示
+
+4. 响应式设计
+   - 移动端适配（< 768px）
+
+=== JavaScript 逻辑要求 ===
+
+1. 文件验证
+   - 检查文件类型（.pdf）
+   - 检查文件大小（< 16MB）
+
+2. 拖拽功能
+   - 阻止默认行为
+   - 拖拽时高亮
+
+3. 上传逻辑
+   - 显示加载动画
+   - 隐藏上传区
+   - Fetch API 发送请求
+
+4. 下载逻辑
+   - 接收 Blob
+   - 创建临时链接
+   - 自动触发下载
+
+5. 错误处理
+   - 捕获所有错误
+   - 显示友好提示
+   - 重置界面状态
+
+=== 用户体验要求 ===
+
+1. 上传前
+   - 清晰的操作指引
+   - 支持两种上传方式
+
+2. 上传中
+   - 显示加载动画
+   - 提示"正在转换..."
+
+3. 上传后
+   - 自动下载文件
+   - 显示成功提示
+   - 允许再次上传
+
+4. 错误时
+   - 红色错误提示
+   - 具体错误信息
+   - 允许重新上传
+
+=== 输出要求 ===
+
+生成 3 个独立文件：
+1. public/index.html - 完整的 HTML 结构
+2. public/style.css - 完整的 CSS 样式
+3. public/script.js - 完整的 JavaScript 逻辑
+
+要求：
+- 代码清晰，注释完整（中文）
+- 遵循最佳实践
+- 美观现代的 UI
+- 流畅的用户体验
+
+=== 输出格式 ===
+
+按以下格式输出 3 个文件的完整代码：
+
+=== public/index.html ===
+[完整 HTML 代码]
+
+=== public/style.css ===
+[完整 CSS 代码]
+
+=== public/script.js ===
+[完整 JavaScript 代码]
+
+请确保代码可以直接使用，无需修改。
+

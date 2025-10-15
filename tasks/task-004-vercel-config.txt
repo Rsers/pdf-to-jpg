@@ -1,0 +1,123 @@
+任务：生成 Vercel 部署配置文件
+
+复杂度：simple
+原因：样板配置文件，标准格式
+
+=== 需要生成的文件 ===
+
+1. vercel.json - Vercel 部署配置
+2. requirements.txt - Python 依赖
+3. .gitignore - Git 忽略文件
+
+=== vercel.json 要求 ===
+
+1. Serverless Functions 配置
+   - 函数路径：api/upload.py
+   - 最大运行时间：10 秒
+   - 内存：1024 MB
+
+2. 路由配置
+   - API 路由：/api/* → api/$1
+   - 静态文件：/* → public/$1
+
+3. 区域配置
+   - 推荐：iad1（美国东海岸）或 hkg1（香港）
+
+4. 构建配置
+   - Python 运行时：3.9
+
+示例结构：
+```json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/*.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ],
+  "functions": {
+    "api/upload.py": {
+      "maxDuration": 10,
+      "memory": 1024
+    }
+  }
+}
+```
+
+=== requirements.txt 要求 ===
+
+包含以下依赖（指定版本）：
+- Flask==3.0.0
+- pdf2image==1.16.3
+- Pillow==10.1.0
+
+注意：
+- poppler-utils 是系统依赖，Vercel 构建时会自动安装
+- 如果需要显式声明，可以添加注释
+
+格式：
+```
+Flask==3.0.0
+pdf2image==1.16.3
+Pillow==10.1.0
+```
+
+=== .gitignore 要求 ===
+
+忽略以下文件/目录：
+1. Python 相关
+   - __pycache__/
+   - *.pyc
+   - *.pyo
+   - *.pyd
+   - .Python
+   - *.egg-info/
+   - venv/
+   - .venv/
+
+2. 临时文件
+   - uploads/
+   - *.pdf
+   - *.jpg
+   - *.zip
+   - /tmp/
+
+3. 编辑器
+   - .vscode/
+   - .idea/
+   - *.swp
+   - .DS_Store
+
+4. Vercel
+   - .vercel
+
+=== 输出格式 ===
+
+按以下格式输出 3 个文件的完整内容：
+
+=== vercel.json ===
+[完整 JSON 配置]
+
+=== requirements.txt ===
+[完整依赖列表]
+
+=== .gitignore ===
+[完整忽略规则]
+
+请确保配置正确，可以直接使用。
+

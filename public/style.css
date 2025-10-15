@@ -1,0 +1,226 @@
+/* 全局样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: #F5F5F5;
+    color: #333;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+/* 容器样式 */
+.container {
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+    background: white;
+    border-radius: 12px;
+    padding: 40px 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 标题样式 */
+.title {
+    color: #4A90E2;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #4A90E2, #357ABD);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+}
+
+/* 上传区域样式 */
+.drop-area {
+    border: 2px dashed #4A90E2;
+    border-radius: 12px;
+    padding: 40px 20px;
+    background-color: #FAFBFF;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-bottom: 30px;
+}
+
+.drop-area:hover {
+    background-color: #F0F5FF;
+    border-color: #357ABD;
+    transform: translateY(-2px);
+}
+
+.drop-area.drag-over {
+    background-color: #E8F2FF;
+    border-color: #2C6CB0;
+    border-style: solid;
+}
+
+.upload-icon {
+    margin-bottom: 20px;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.drop-area:hover .upload-icon {
+    opacity: 1;
+}
+
+.drop-text {
+    font-size: 1.2rem;
+    color: #4A90E2;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.drop-or {
+    color: #888;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}
+
+.file-size {
+    color: #999;
+    font-size: 0.85rem;
+    margin-top: 15px;
+}
+
+/* 按钮样式 */
+.select-btn {
+    background: linear-gradient(135deg, #4A90E2, #357ABD);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+}
+
+.select-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(74, 144, 226, 0.4);
+}
+
+.select-btn:active {
+    transform: translateY(0);
+}
+
+.select-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* 加载动画样式 */
+.loading {
+    margin: 30px 0;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #E8F2FF;
+    border-top: 4px solid #4A90E2;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading p {
+    color: #4A90E2;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* 消息提示样式 */
+.message {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.message.success {
+    background-color: #D5F4E6;
+    color: #27AE60;
+    border: 1px solid #27AE60;
+}
+
+.message.error {
+    background-color: #FDE8E8;
+    color: #E74C3C;
+    border: 1px solid #E74C3C;
+}
+
+/* 工具类 */
+.hidden {
+    display: none;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .container {
+        padding: 30px 20px;
+        margin: 10px;
+    }
+    
+    .title {
+        font-size: 2rem;
+    }
+    
+    .subtitle {
+        font-size: 1rem;
+    }
+    
+    .drop-area {
+        padding: 30px 15px;
+    }
+    
+    .drop-text {
+        font-size: 1.1rem;
+    }
+    
+    .select-btn {
+        padding: 10px 25px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .title {
+        font-size: 1.8rem;
+    }
+    
+    .drop-area {
+        padding: 25px 10px;
+    }
+    
+    .upload-icon {
+        width: 48px;
+        height: 48px;
+    }
+}
