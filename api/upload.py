@@ -2,13 +2,13 @@ import os
 import zipfile
 import tempfile
 import atexit
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, send_file, jsonify, send_from_directory
 from pdf2image import convert_from_path
 from PIL import Image
 import io
 
 # 初始化 Flask 应用
-app = Flask(__name__)
+app = Flask(__name__, static_folder="public", static_url_path="")
 
 # 环境配置
 UPLOAD_FOLDER = "./uploads"
@@ -255,17 +255,10 @@ def internal_server_error(e):
     return jsonify({"error": True, "message": "服务器内部错误"}), 500
 
 
-# Vercel 需要这个处理程序
 @app.route("/")
 def home():
-    return jsonify(
-        {
-            "message": "PDF to JPG 转换 API",
-            "status": "运行中",
-            "environment": "腾讯云服务器",
-            "port": os.environ.get("PORT", 3000)
-        }
-    )
+    # 根路径直接返回前端页面
+    return send_from_directory("public", "index.html")
 
 
 # 用于生产环境运行
